@@ -125,6 +125,14 @@ function __init__()
             push!(Filters.FilterPipeline(p), H5Zblosc.BloscFilter(; level=level))
     end
 
+    @require StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c" begin
+        function Base.setindex!(dset::Dataset, x::StaticArraysCore.StaticArray, I::IndexType...)
+            indices = Base.to_indices(dset, I)
+            X = fill(x, map(length, indices))
+            Base.setindex!(dset, X, indices...)
+        end
+    end
+
     return nothing
 end
 

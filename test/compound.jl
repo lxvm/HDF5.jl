@@ -1,4 +1,4 @@
-using Random, Test, HDF5
+using Random, Test, StaticArrays, HDF5
 
 import HDF5.datatype
 import Base.convert
@@ -167,11 +167,14 @@ end
 
     tuples = [(1, namedtuples[1], (0.1, )), (2, namedtuples[2], (1.0,))]
 
+    svectors = [SVector(1,2,3), SVector(4,5,6)]
+
     fn = tempname()
     h5open(fn, "w") do h5f
         write_dataset(h5f, "the/bars", bars)
         write_dataset(h5f, "the/namedtuples", namedtuples)
         write_dataset(h5f, "the/tuples", tuples)
+        write_dataset(h5f, "the/svectors", svectors)
     end
 
     thebars = h5open(fn, "r") do h5f
@@ -213,6 +216,24 @@ end
     @test thetuples[2][2].b ≈ 5.6
     @test thetuples[2][3][1] ≈ 1.0
 
+    thesvectors = h5open(fn, "r") do h5f
+        read(h5f, "the/svectors")
+    end
+
+    @test thesvectors[1].data[1] == 1
+    @test thesvectors[1].data[2] == 2
+    @test thesvectors[1].data[3] == 3
+    @test thesvectors[2].data[1] == 4
+    @test thesvectors[2].data[2] == 5
+    @test thesvectors[2].data[3] == 6
+
+    thesvectors_r = reinterpret(SVector{3,Int}, thesvectors)
+    @test thesvectors_r[1][1] == 1
+    @test thesvectors_r[1][2] == 2
+    @test thesvectors_r[1][3] == 3
+    @test thesvectors_r[2][1] == 4
+    @test thesvectors_r[2][2] == 5
+    @test thesvectors_r[2][3] == 6
 
     mutable_bars = [MutableBar(1), MutableBar(2), MutableBar(3)]
 
